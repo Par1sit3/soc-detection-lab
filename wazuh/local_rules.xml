@@ -1,0 +1,81 @@
+<!--
+  Custom detection rules for the SOC detection lab.
+  ID range 100100-100199. Each rule builds on a stock Wazuh rule (if_sid)
+  and adds context, a higher severity and a MITRE ATT&CK mapping.
+-->
+
+<!-- ===== Network detections (Suricata sensor) ===== -->
+<group name="lab,suricata,network,">
+
+  <rule id="100101" level="8">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature">^LAB Port scan</field>
+    <description>Recon: port scan against $(dest_ip) from $(src_ip)</description>
+    <mitre><id>T1046</id></mitre>
+  </rule>
+
+  <rule id="100102" level="10">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature">^LAB SSH brute force</field>
+    <description>Credential access: SSH brute force seen on the wire from $(src_ip)</description>
+    <mitre><id>T1110.001</id></mitre>
+  </rule>
+
+  <rule id="100103" level="10">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature">^LAB Web attack</field>
+    <description>Initial access attempt: $(alert.signature) from $(src_ip)</description>
+    <mitre><id>T1190</id></mitre>
+  </rule>
+
+  <rule id="100104" level="7">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature">^LAB Web scanner</field>
+    <description>Recon: vulnerability scanner user-agent from $(src_ip)</description>
+    <mitre><id>T1595.002</id></mitre>
+  </rule>
+
+</group>
+
+<!-- ===== Host detections (agent on web01) ===== -->
+<group name="lab,host,">
+
+  <!-- 5715 = sshd: authentication success -->
+  <rule id="100110" level="10">
+    <if_sid>5715</if_sid>
+    <user>^svc-</user>
+    <description>Valid accounts: interactive SSH login by service account $(dstuser) from $(srcip)</description>
+    <mitre><id>T1078.003</id></mitre>
+    <group>authentication_success,</group>
+  </rule>
+
+  <!-- 5902 = new user added to the system -->
+  <rule id="100111" level="12">
+    <if_sid>5902</if_sid>
+    <description>Persistence: new local account created on server</description>
+    <mitre><id>T1136.001</id></mitre>
+  </rule>
+
+  <!-- 550 = file modified, 554 = file added (file integrity monitoring) -->
+  <rule id="100112" level="12">
+    <if_sid>550, 554</if_sid>
+    <field name="file">authorized_keys$</field>
+    <description>Persistence: SSH authorized_keys changed - $(file)</description>
+    <mitre><id>T1098.004</id></mitre>
+  </rule>
+
+  <rule id="100113" level="12">
+    <if_sid>554</if_sid>
+    <field name="file">^/var/www/html/\.*\.php$|^/var/www/html/\.*\.sh$|^/var/www/html/\.*\.jsp$</field>
+    <description>Persistence: possible web shell dropped in web root - $(file)</description>
+    <mitre><id>T1505.003</id></mitre>
+  </rule>
+
+  <rule id="100114" level="10">
+    <if_sid>550, 554</if_sid>
+    <field name="file">^/etc/sudoers</field>
+    <description>Privilege escalation: sudoers configuration changed - $(file)</description>
+    <mitre><id>T1548.003</id></mitre>
+  </rule>
+
+</group>

@@ -1,0 +1,73 @@
+# Lab overlay. Layered on top of the upstream Wazuh single-node compose file
+# (fetched by scripts/bootstrap.sh into vendor/). Run everything through `make`.
+#
+# Networks
+#   default  = management network: SIEM components + the victim's agent traffic
+#   labnet   = "hostile" network: attacker <-> victim only. The attacker has no
+#              route to the SIEM, the same way a real attacker should not be able
+#              to reach your log infrastructure.
+
+services:
+  # --- Harden the upstream defaults: nothing listens on the LAN ---------------
+  wazuh.manager:
+    ports: !override
+      - "127.0.0.1:55000:55000"
+    volumes:
+      - ${LAB_DIR}/wazuh/local_rules.xml:/wazuh-config-mount/etc/rules/local_rules.xml:ro
+
+  wazuh.indexer:
+    ports: !override
+      - "127.0.0.1:9200:9200"
+
+  wazuh.dashboard:
+    ports: !override
+      - "127.0.0.1:8443:5601"
+
+  # --- Monitored endpoint: SSH + nginx + Wazuh agent --------------------------
+  victim:
+    build: ${LAB_DIR}/victim
+    hostname: web01
+    restart: unless-stopped
+    cap_add: [NET_ADMIN]          # active response adds iptables drop rules
+    depends_on: [wazuh.manager]
+    volumes:
+      - victim_ossec_etc:/var/ossec/etc
+      - suricata_logs:/var/log/suricata
+    networks:
+      default: {}
+      labnet:
+        ipv4_address: 172.30.0.10
+
+  # --- Network sensor: shares the victim's network stack (like a SPAN port) ---
+  suricata:
+    image: jasonish/suricata:7.0
+    restart: unless-stopped
+    network_mode: "service:victim"
+    cap_add: [NET_ADMIN, NET_RAW, SYS_NICE]
+    entrypoint: ["/bin/sh", "/lab/entrypoint.sh"]
+    depends_on: [victim]
+    volumes:
+      - ${LAB_DIR}/suricata:/lab:ro
+      - suricata_logs:/var/log/suricata
+
+  # --- Attack box: only on labnet ---------------------------------------------
+  attacker:
+    build: ${LAB_DIR}/attacker
+    hostname: attacker
+    restart: unless-stopped
+    cap_add: [NET_RAW]            # nmap SYN scans
+    volumes:
+      - ${LAB_DIR}/attacker/attacks:/attacks:ro
+    networks:
+      labnet:
+        ipv4_address: 172.30.0.66
+
+networks:
+  labnet:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  victim_ossec_etc:
+  suricata_logs:

@@ -1,0 +1,19 @@
+# Custom Suricata signatures for the SOC detection lab.
+# Every message starts with "LAB" so the Wazuh rules in wazuh/local_rules.xml
+# can pick them up and map them to MITRE ATT&CK.
+# SID range 1000001+ is reserved for local rules.
+
+# T1046 Network Service Discovery - one source sends SYNs to many ports quickly.
+alert tcp any any -> $HOME_NET any (msg:"LAB Port scan - SYN sweep from single source"; flags:S,12; threshold:type both, track by_src, count 100, seconds 10; classtype:attempted-recon; sid:1000001; rev:1;)
+
+# T1110 Brute Force - many new SSH connections from one source.
+alert tcp any any -> $HOME_NET 22 (msg:"LAB SSH brute force - rapid new connections"; flags:S,12; threshold:type both, track by_src, count 8, seconds 30; classtype:attempted-admin; sid:1000002; rev:1;)
+
+# T1190 Exploit Public-Facing Application - SQL injection patterns in the URI.
+alert http any any -> $HOME_NET any (msg:"LAB Web attack - SQL injection attempt"; flow:established,to_server; http.uri; pcre:"/(union[\s+]+select|['\s+]or[\s+]+['\d]+\s*=\s*['\d]+|sleep\(\d+\))/i"; classtype:web-application-attack; sid:1000003; rev:1;)
+
+# T1190 - directory traversal toward system files.
+alert http any any -> $HOME_NET any (msg:"LAB Web attack - path traversal attempt"; flow:established,to_server; http.uri.raw; pcre:"/(\.\.\/|\.\.%2f|%2e%2e%2f|%2e%2e\/)/i"; classtype:web-application-attack; sid:1000004; rev:1;)
+
+# T1595.002 Vulnerability Scanning - well-known scanner user agents.
+alert http any any -> $HOME_NET any (msg:"LAB Web scanner user-agent"; flow:established,to_server; http.user_agent; pcre:"/(sqlmap|nikto|nmap scripting engine|gobuster|dirbuster)/i"; classtype:web-application-attack; sid:1000005; rev:1;)

@@ -1,0 +1,36 @@
+TIME      LVL  RULE    MITRE                DESCRIPTION
+05:53:04  8    100101  T1046                Recon: port scan against 172.30.0.10 from 172.30.0.66
+05:53:10  7    31103   T1190                SQL injection attempt.
+05:53:10  7    31103   T1190                SQL injection attempt.
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - SQL injection attempt from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - SQL injection attempt from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - SQL injection attempt from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - path traversal attempt from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - path traversal attempt from 172.30.0.66
+05:53:10  10   100103  T1190                Initial access attempt: LAB Web attack - path traversal attempt from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  7    100104  T1595.002            Recon: vulnerability scanner user-agent from 172.30.0.66
+05:53:10  10   100102  T1110.001            Credential access: SSH brute force seen on the wire from 172.30.0.66
+05:53:14  10   5763    T1110                sshd: brute force trying to get access to the system. Authentication failed.
+05:54:00  10   100102  T1110.001            Credential access: SSH brute force seen on the wire from 172.30.0.66
+05:55:24  7    550     T1565.001            Integrity checksum changed.
+05:55:24  12   40112   T1078,T1110          Multiple authentication failures followed by a success.
+05:55:24  12   40112   T1078,T1110          Multiple authentication failures followed by a success.
+05:55:24  15   40501   T1068,T1136,T1203    Attacks followed by the addition of an user.
+05:55:24  15   40501   T1068,T1136,T1203    Attacks followed by the addition of an user.
+05:55:24  7    550     T1565.001            Integrity checksum changed.
+05:55:24  12   100112  T1098.004            Persistence: SSH authorized_keys changed - /root/.ssh/authorized_keys
+05:55:25  12   100113  T1505.003            Persistence: possible web shell dropped in web root - /var/www/html/upload.php
+05:55:26  12   40112   T1078,T1110          Multiple authentication failures followed by a success.
+05:55:26  12   40112   T1078,T1110          Multiple authentication failures followed by a success.

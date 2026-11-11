@@ -1,0 +1,5 @@
+# Upstream Wazuh deployment + generated TLS keys: fetched/created by `make setup`
+vendor/
+*.pem
+*.key
+.env
