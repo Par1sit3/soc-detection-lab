@@ -126,7 +126,9 @@ tests/rule-tests.tsv     rule test cases
 scripts/                 bootstrap, readiness check, alert table, rule tests
 ```
 
-`make setup` fetches the official [wazuh-docker](https://github.com/wazuh/wazuh-docker) single-node deployment (pinned to v4.14.10) into `vendor/` and generates TLS certificates. Neither is committed.
+### Not in this repo
+
+The Wazuh server config and TLS certificates (`vendor/`) are deliberately left out: private keys shouldn't go in a public repo. `make setup` downloads the official [wazuh-docker](https://github.com/wazuh/wazuh-docker) single-node deployment (pinned to v4.14.10) and generates fresh certificates for anyone who clones it.
 
 ## Safety
 
