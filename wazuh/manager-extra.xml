@@ -1,0 +1,25 @@
+
+<!-- SOC-LAB: additions to the Wazuh manager config. scripts/bootstrap.sh appends
+     this file to the upstream wazuh_manager.conf (and refreshes it on every run). -->
+<ossec_config>
+
+  <!-- Automated containment.
+       5763 = stock rule "sshd: brute force trying to get access to the system".
+       The offending source IP is dropped with iptables on the agent for 120 seconds. -->
+  <active-response>
+    <command>firewall-drop</command>
+    <location>local</location>
+    <rules_id>5763</rules_id>
+    <timeout>120</timeout>
+  </active-response>
+
+  <!-- Alert to ticket: every alert at level 10 or above is sent to the ticket
+       queue by wazuh/custom-ticket. -->
+  <integration>
+    <name>custom-ticket</name>
+    <hook_url>http://tickets:8080/api/alerts</hook_url>
+    <level>10</level>
+    <alert_format>json</alert_format>
+  </integration>
+
+</ossec_config>

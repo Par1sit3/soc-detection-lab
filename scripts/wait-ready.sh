@@ -15,6 +15,7 @@ checks=(
   "manager API up|curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1:55000 | grep -q 401"
   "dashboard up|curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1:8443/app/login | grep -qE '200|302'"
   "agent web01 connected|$COMPOSE exec -T wazuh.manager /var/ossec/bin/agent_control -l | grep -q 'web01.*Active'"
+  "ticket queue up|curl -s http://127.0.0.1:8080/healthz | grep -q true"
   "suricata capturing|$COMPOSE exec -T victim test -s /var/log/suricata/eve.json"
 )
 

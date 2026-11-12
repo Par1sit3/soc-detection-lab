@@ -1,0 +1,9 @@
+ID  SEV       STATUS        ALERTS  RULE    MITRE              SOURCE                      TITLE
+5   critical  open          1       40501   T1068,T1136,T1203  -                           Attacks followed by the addition of an user.
+8   high      open          1       100113  T1505.003          /var/www/html/upload.php    Persistence: possible web shell dropped in web root - /var/w
+7   high      open          1       100112  T1098.004          /root/.ssh/authorized_keys  Persistence: SSH authorized_keys changed - /root/.ssh/author
+6   high      open          1       100111  T1136.001          -                           Persistence: new local account created on server
+4   high      open          4       40112   T1078,T1110        172.30.0.66                 Multiple authentication failures followed by a success.
+1   medium    open          6       100103  T1190              172.30.0.66                 Initial access attempt: LAB Web attack - SQL injection attem
+3   medium    acknowledged  1       5763    T1110              172.30.0.66                 sshd: brute force trying to get access to the system. Authen
+2   medium    closed        2       100102  T1110.001          172.30.0.66                 Credential access: SSH brute force seen on the wire from 172

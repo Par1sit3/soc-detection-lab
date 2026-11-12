@@ -1,6 +1,6 @@
 # SOC Detection Lab
 
-A small security operations centre that runs on one machine with Docker. It attacks a deliberately weak Linux server, detects each stage of the attack with a SIEM and a network IDS, and automatically blocks the attacker.
+A small security operations centre that runs on one machine with Docker. It attacks a deliberately weak Linux server, detects each stage of the attack with a SIEM and a network IDS, automatically blocks the attacker, and opens a ticket for every serious alert.
 
 I built it to practise the blue-team side of security: reading logs, writing detection rules, mapping them to MITRE ATT&CK and checking that they actually fire. It was built with help from an AI coding assistant (Claude Code); I run it, test it and extend the rules myself.
 
@@ -13,6 +13,7 @@ I built it to practise the blue-team side of security: reading logs, writing det
 | Endpoint | Debian 12 server `web01` with SSH, nginx and a Wazuh agent | The monitored host. Ships auth, web and IDS logs; file integrity monitoring; CIS benchmark scan |
 | Attacker | Debian with nmap, hydra, curl | Runs four scripted attack scenarios |
 | Response | Wazuh active response (`firewall-drop`) | Drops the attacker's IP for 120 seconds when a brute force is detected |
+| Ticketing | Small Python ticket queue fed by a Wazuh integration | Turns every level 10+ alert into a ticket, groups repeats, sets severity and attaches triage steps |
 
 ```mermaid
 flowchart LR
@@ -25,12 +26,14 @@ flowchart LR
     M[Wazuh manager<br/>rules + active response]
     I[Wazuh indexer]
     D[Wazuh dashboard<br/>localhost:8443]
+    T[Ticket queue<br/>localhost:8080]
   end
   A -- attacks --> V
   S -. eve.json .-> V
   V -- logs, FIM, SCA --> M
   M -- firewall-drop --> V
   M --> I --> D
+  M -- level 10+ alerts --> T
 ```
 
 The attacker is only attached to `labnet`, so it cannot reach the SIEM. Every published port is bound to `127.0.0.1`, so nothing in the lab is reachable from the rest of the network.
@@ -45,9 +48,10 @@ cd soc-detection-lab
 make up        # first run downloads ~3 GB and takes a few minutes
 make attack    # run all four attack scenarios
 make alerts    # see what was detected
+make tickets   # see the tickets those alerts opened
 ```
 
-Dashboard: <https://localhost:8443> (user `admin`, password `SecretPassword`, accept the self-signed certificate). `make help` lists every command; `make clean` removes everything.
+Dashboard: <https://localhost:8443> (user `admin`, password `SecretPassword`, accept the self-signed certificate). Ticket queue: <http://localhost:8080>. `make help` lists every command; `make clean` removes everything.
 
 ## Attack scenarios and detections
 
@@ -88,6 +92,25 @@ port 22 no longer reachable - active response blocked the attacker
 and `make blocked` showed the rule Wazuh added on the victim: `-A INPUT -s 172.30.0.66/32 -j DROP`.
 
 Rules 100110 (service-account login) and 100111 (new account) fire when scenario 4 is run on its own. When it follows a brute force, Wazuh's stock correlation rules 40112 and 40501 match the same events at a higher severity and take precedence, which is the better alert.
+
+## Alert to ticket
+
+An alert nobody acts on is not much use, so the lab finishes the workflow: Wazuh's integration daemon runs [`wazuh/custom-ticket`](wazuh/custom-ticket) for every alert at level 10 or above, which posts the alert to a small ticket service ([`tickets/app.py`](tickets/app.py), Python standard library and SQLite).
+
+The service:
+
+- **groups repeats**: alerts with the same rule, host and source are added to the existing ticket while it is still open or acknowledged, so one attack does not flood the queue
+- **sets severity** from the Wazuh level: 10-11 medium, 12-14 high, 15+ critical, and raises a ticket's severity if a worse alert joins it
+- **attaches first triage steps** chosen by the alert's MITRE ATT&CK technique
+- **tracks status**: open, acknowledged, closed (`make ticket-ack ID=3`, `make ticket-close ID=3`)
+
+One full `make attack` run produced 17 alerts at level 10 or above, which became 8 tickets:
+
+![Ticket queue showing eight tickets created from the attack run](docs/screenshots/ticket-queue.png)
+
+`make test` runs eight unit tests for the grouping, severity and status logic. One of them checks that log content is HTML-escaped on the page, because the text in an alert comes from the attacker.
+
+This is a deliberately small stand-in for a case-management tool such as TheHive or Jira, sized to fit an 8 GB machine. It has no authentication and only listens on localhost.
 
 ## Dashboard
 
@@ -145,8 +168,10 @@ victim/                  monitored server image and Wazuh agent config
 attacker/attacks/        the four attack scripts
 suricata/local.rules     network signatures
 wazuh/local_rules.xml    custom Wazuh rules with ATT&CK mappings
-wazuh/active-response.xml  automated containment config
-tests/rule-tests.tsv     rule test cases
+wazuh/manager-extra.xml  manager additions: active response and ticket integration
+wazuh/custom-ticket      integration script that sends alerts to the ticket queue
+tickets/                 ticket queue service
+tests/                   rule test cases and ticket queue unit tests
 scripts/                 bootstrap, readiness check, alert table, rule tests
 ```
 
@@ -162,7 +187,7 @@ The victim is intentionally vulnerable: a guessable password, passwordless sudo,
 
 - Add a Windows endpoint with Sysmon
 - Load the Emerging Threats Open ruleset next to the custom signatures
-- Send high-severity alerts to a chat webhook
+- Replace the ticket queue with TheHive on a machine with more memory
 - Deploy the same stack on my Proxmox host as separate VMs
 
 ## License

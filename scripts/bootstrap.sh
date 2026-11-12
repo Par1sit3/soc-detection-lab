@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time setup: fetch the pinned upstream Wazuh single-node deployment,
-# generate TLS certificates and add the lab's active-response block.
+# generate TLS certificates and add the lab's manager config additions.
 set -euo pipefail
 
 WAZUH_TAG="v4.14.10"
@@ -22,10 +22,10 @@ if [ ! -d "$NODE/config/wazuh_indexer_ssl_certs" ]; then
   (cd "$NODE" && docker compose -f generate-indexer-certs.yml run --rm generator)
 fi
 
+# Append the lab's manager additions (active response + ticket integration).
+# Anything from a previous run is removed first so edits to the file take effect.
 CONF="$NODE/config/wazuh_cluster/wazuh_manager.conf"
-if ! grep -q 'SOC-LAB' "$CONF"; then
-  step "Enabling active response (firewall-drop) in the manager config"
-  cat "$LAB_DIR/wazuh/active-response.xml" >> "$CONF"
-fi
+sed -i '/<!-- SOC-LAB/,$d' "$CONF"
+cat "$LAB_DIR/wazuh/manager-extra.xml" >> "$CONF"
 
 step "Setup complete. Next: make up"
