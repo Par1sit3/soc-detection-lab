@@ -89,6 +89,30 @@ and `make blocked` showed the rule Wazuh added on the victim: `-A INPUT -s 172.3
 
 Rules 100110 (service-account login) and 100111 (new account) fire when scenario 4 is run on its own. When it follows a brute force, Wazuh's stock correlation rules 40112 and 40501 match the same events at a higher severity and take precedence, which is the better alert.
 
+## Dashboard
+
+Screenshots from the Wazuh dashboard after running the attack scenarios.
+
+**Overview** - one active agent and the last 24 hours of alerts by severity.
+
+![Wazuh overview showing one active agent and alert counts by severity](docs/screenshots/overview.png)
+
+**Threat Hunting** - alert totals for `web01`, including authentication failures and level 12+ alerts.
+
+![Threat Hunting dashboard for web01](docs/screenshots/threat-hunting.png)
+
+**MITRE ATT&CK** - the same alerts grouped by attacker tactic and technique.
+
+![MITRE ATT&CK dashboard showing tactics and techniques seen](docs/screenshots/mitre-attack.png)
+
+**File Integrity Monitoring** - files the attacker added and changed, such as `/etc/passwd` and the backdoor account's home directory.
+
+![File integrity monitoring dashboard](docs/screenshots/file-integrity.png)
+
+**Configuration Assessment** - CIS Debian 12 benchmark results for the victim, which scores 44% because it is deliberately unhardened.
+
+![CIS benchmark results for web01](docs/screenshots/config-assessment.png)
+
 ## Testing the rules
 
 Detection rules are treated like code. [`tests/rule-tests.tsv`](tests/rule-tests.tsv) holds sample log lines with the rule ID each one should trigger, and `make test-rules` replays them through `wazuh-logtest`:
